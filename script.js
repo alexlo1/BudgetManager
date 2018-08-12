@@ -1,3 +1,8 @@
+const detailsTable = document.getElementById('details-table');
+const totalIn = document.getElementById('total-in');
+const totalOut = document.getElementById('total-out');
+const totalChange = document.getElementById('total-change');
+
 const inputForm = document.getElementById('input-form');
 const inputDate = document.getElementById('date-input');
 const inputCategory = document.getElementById('category-input');
@@ -45,18 +50,19 @@ function addItem(data) {
 
   let dateString = data.date.substring(5, 7) + '/' +
                    data.date.substring(8, 10) + '/' +
-                   data.date.substring(2, 4);
-  node.querySelector('.date-col').textContent = dateString;
+                   data.date.substring(0, 4);
+  if(dateString === '//') dateString = '';
+  node.querySelector('.date-text').textContent = dateString;
 
-  node.querySelector('.category-col').textContent = data.category;
+  node.querySelector('.category-text').textContent = data.category;
 
-  node.querySelector('.name-col').textContent = data.name;
+  node.querySelector('.name-text').textContent = data.name;
 
   if(data.income > 0)
-    node.querySelector('.income-col').textContent = data.income;
+    node.querySelector('.income-text').textContent = data.income;
 
   if(data.expense > 0)
-    node.querySelector('.expense-col').textContent = data.expense;
+    node.querySelector('.expense-text').textContent = data.expense;
 
   let editButton = node.querySelector('.edit-button');
   let saveButton = node.querySelector('.save-button');
@@ -66,12 +72,57 @@ function addItem(data) {
     console.log('edited!');
     editButton.classList.toggle('hidden');
     saveButton.classList.toggle('hidden');
+
+    node.querySelector('.date-text').classList.add('hidden');
+    node.querySelector('.category-text').classList.add('hidden');
+    node.querySelector('.name-text').classList.add('hidden');
+    node.querySelector('.income-text').classList.add('hidden');
+    node.querySelector('.expense-text').classList.add('hidden');
+
+    let dateString = node.querySelector('.date-text').textContent.substring(6, 10) + '-' +
+                     node.querySelector('.date-text').textContent.substring(0, 2) + '-' +
+                     node.querySelector('.date-text').textContent.substring(3, 5);
+    node.querySelector('.date-edit').value = dateString;
+    node.querySelector('.category-edit').value = node.querySelector('.category-text').textContent;
+    node.querySelector('.name-edit').value = node.querySelector('.name-text').textContent;
+    node.querySelector('.income-edit').value = node.querySelector('.income-text').textContent;
+    node.querySelector('.expense-edit').value = node.querySelector('.expense-text').textContent;
+
+    node.querySelector('.date-edit').classList.remove('hidden');
+    node.querySelector('.category-edit').classList.remove('hidden');
+    node.querySelector('.name-edit').classList.remove('hidden');
+    node.querySelector('.income-edit').classList.remove('hidden');
+    node.querySelector('.expense-edit').classList.remove('hidden');
   });
 
   saveButton.addEventListener('click', () => {
     console.log('saved!');
     saveButton.classList.toggle('hidden');
     editButton.classList.toggle('hidden');
+
+    node.querySelector('.date-edit').classList.add('hidden');
+    node.querySelector('.category-edit').classList.add('hidden');
+    node.querySelector('.name-edit').classList.add('hidden');
+    node.querySelector('.income-edit').classList.add('hidden');
+    node.querySelector('.expense-edit').classList.add('hidden');
+
+    let dateString = node.querySelector('.date-edit').value.substring(5, 7) + '/' +
+                     node.querySelector('.date-edit').value.substring(8, 10) + '/' +
+                     node.querySelector('.date-edit').value.substring(0, 4);
+    if(dateString === '//') dateString = '';
+    node.querySelector('.date-text').textContent = dateString;
+    node.querySelector('.category-text').textContent = node.querySelector('.category-edit').value;
+    node.querySelector('.name-text').textContent = node.querySelector('.name-edit').value;
+    node.querySelector('.income-text').textContent = node.querySelector('.income-edit').value;
+    node.querySelector('.expense-text').textContent = node.querySelector('.expense-edit').value;
+
+    node.querySelector('.date-text').classList.remove('hidden');
+    node.querySelector('.category-text').classList.remove('hidden');
+    node.querySelector('.name-text').classList.remove('hidden');
+    node.querySelector('.income-text').classList.remove('hidden');
+    node.querySelector('.expense-text').classList.remove('hidden');
+
+    updateTotals();
   });
 
   deleteButton.addEventListener('click', () => {
@@ -82,6 +133,28 @@ function addItem(data) {
   });
 
   node.id = '';
+
+  updateTotals();
+}
+
+function updateTotals() {
+  let incomeValues = detailsTable.querySelectorAll('.income-text');
+  let totalIncome = 0;
+  incomeValues.forEach(n => {
+    if(n.textContent)
+      totalIncome += parseFloat(n.textContent);
+  });
+  totalIn.textContent = totalIncome;
+
+  let expenseValues = detailsTable.querySelectorAll('.expense-text');
+  let totalExpense = 0;
+  expenseValues.forEach(n => {
+    if(n.textContent)
+      totalExpense += parseFloat(n.textContent);
+  });
+  totalOut.textContent = totalExpense;
+
+  totalChange.textContent = totalIncome - totalExpense;
 }
 
 //----------------------------------------------------------------------------
@@ -115,9 +188,17 @@ const data = [
     income: 0,
     expense: 600
   },
+  {
+    date: '2018-08-04',
+    category: 'Income',
+    name: 'Gift',
+    income: 200,
+    expense: 0
+  }
 ];
 
 buildTable(data);
+updateTotals();
 
 inputForm.addEventListener('submit', event => {
   event.preventDefault();
@@ -135,3 +216,6 @@ cancelButton.addEventListener('click', () => {
   inputForm.classList.add('hidden');
   clearForm();
 });
+
+let d = new Date();
+document.getElementById('date-input').value = d.toJSON().substring(0, 10);

@@ -12,7 +12,7 @@
   </header>
   <main>
     <section id="balance">
-      <h3>Current balance: 2000</h3>
+      <h3>Net Change: <span id="total-change"></span></h3>
     </section>
     <br><hr>
     <section id="details">
@@ -23,11 +23,11 @@
           <tbody>
             <tr>
               <td><label for="date-input">Date:</label></td>
-              <td><input type="date" id="date-input" required></td>
+              <td><input type="date" id="date-input"></td>
             </tr>
             <tr>
               <td><label for="category-input">Category:</label></td>
-              <td><input type="text" id="category-input" required></td>
+              <td><input type="text" id="category-input"></td>
             </tr>
             <tr>
               <td><label for="name-input">Name:</label></td>
@@ -61,11 +61,26 @@
         <tbody>
           <template id="row-template">
             <tr>
-              <td class="date-col"></td>
-              <td class="category-col"></td>
-              <td class="name-col"></td>
-              <td class="income-col"></td>
-              <td class="expense-col"></td>
+              <td class="date-col">
+                <span class="date-text"></span>
+                <input type="date" class="date-edit hidden">
+              </td>
+              <td class="category-col">
+                <span class="category-text"></span>
+                <input type="text" class="category-edit hidden">
+              </td>
+              <td class="name-col">
+                <span class="name-text"></span>
+                <input type="text" class="name-edit hidden">
+              </td>
+              <td class="income-col">
+                <span class="income-text"></span>
+                <input type="number" class="income-edit hidden" step="0.01">
+              </td>
+              <td class="expense-col">
+                <span class="expense-text"></span>
+                <input type="number" class="expense-edit hidden" step="0.01">
+              </td>
               <td class="button-col">
                 <button class="edit-button">Edit</button>
                 <button class="save-button hidden">Save</button>
@@ -79,8 +94,8 @@
             <th class="date-col">Totals</th>
             <th class="category-col"></th>
             <th class="name-col"></th>
-            <th id="total-in" class="income-col">1000</th>
-            <th id="total-out" class="expense-col">1700</th>
+            <th id="total-in" class="income-col"></th>
+            <th id="total-out" class="expense-col"></th>
             <th class="button-col"></th>
           </tr>
         </tfoot>
@@ -114,12 +129,7 @@
             <td id="avg-week-out"></td>
             <td id="avg-week-net"></td>
           </tr>
-          <tr>
-            <td>Per month</td>
-            <td id="avg-month-in"></td>
-            <td id="avg-month-out"></td>
-            <td id="avg-month-net"></td>
-          </tr>
+
         </tbody>
       </table>
     </section>
@@ -128,6 +138,19 @@
   <footer>
     <a href="index.html">Back to login.</a>
   </footer>
+  <script src="https://www.gstatic.com/firebasejs/5.3.1/firebase.js"></script>
+  <script>
+    // Initialize Firebase
+    var config = {
+      apiKey: "AIzaSyBM4z5_Eeglb4-az3neg7NVtt9J04eS2jQ",
+      authDomain: "budgetmanager-b2b50.firebaseapp.com",
+      databaseURL: "https://budgetmanager-b2b50.firebaseio.com",
+      projectId: "budgetmanager-b2b50",
+      storageBucket: "budgetmanager-b2b50.appspot.com",
+      messagingSenderId: "1003670775096"
+    };
+    firebase.initializeApp(config);
+  </script>
   <script src="script.js"></script>
 </body>
 </html>
