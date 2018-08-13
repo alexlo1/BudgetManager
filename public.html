@@ -129,6 +129,7 @@
             <td id="avg-week-out"></td>
             <td id="avg-week-net"></td>
           </tr>
+
         </tbody>
       </table>
     </section>
@@ -149,10 +150,7 @@
       messagingSenderId: "1003670775096"
     };
     firebase.initializeApp(config);
-    const firestore = firebase.firestore();
-    const settings = {timestampsInSnapshots: true};
-    firestore.settings(settings);
   </script>
-  <script src="main.js"></script>
+  <script src="public.js"></script>
 </body>
 </html>

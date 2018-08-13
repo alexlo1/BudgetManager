@@ -67,6 +67,10 @@ button, input[type=submit] {
   display: none;
 }
 
+button.frontpage {
+  width: 150px;
+}
+
 #total-change {
   font-size: 2.4rem;
 }
