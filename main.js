@@ -1,4 +1,7 @@
 const detailsTable = document.getElementById('details-table');
+const detailsTbody = document.getElementById('details-tbody');
+const rowTemplate = document.getElementById('row-template');
+
 const totalIn = document.getElementById('total-in');
 const totalOut = document.getElementById('total-out');
 const totalChange = document.getElementById('total-change');
@@ -14,13 +17,29 @@ const addButton = document.getElementById('add-button');
 const submitButton = document.getElementById('submit-input');
 const cancelButton = document.getElementById('cancel-input');
 
-function buildTable(data) {
-  data.forEach(i => {
-    addItem(i);
+const testUserRef = firestore.collection('users').doc('testuser');
+const userRef = testUserRef;
+
+/* Uses the firebase data snapshot to add each item to the table */
+function buildTable(snapshot) {
+  snapshot.forEach(doc => {
+    addItemRow(doc.data());
   });
 }
 
-function clearForm() {
+/* First clears table rows
+ * Then uses the firebase data snapshot to add each item to the table
+ */
+function rebuildTable(snapshot) {
+  while (detailsTbody.lastChild) {
+    if(detailsTbody.lastChild.id === 'row-template') break;
+    detailsTbody.removeChild(detailsTbody.lastChild);
+  }
+  buildTable(snapshot);
+}
+
+/* Clears the add item input form */
+function clearAddForm() {
   inputDate.value = '';
   inputCategory.value = '';
   inputName.value = '';
@@ -28,7 +47,10 @@ function clearForm() {
   inputExpense.value = 0;
 }
 
-function readForm() {
+/* Reads the add item input form
+ * Returns an [item] object
+ */
+function readAddForm() {
   return {
     date: inputDate.value,
     category: inputCategory.value,
@@ -38,15 +60,18 @@ function readForm() {
   };
 }
 
-function addItem(data) {
-  console.log('added!');
-  let temp = document.getElementById('row-template');
-  let tbody = document.querySelector('#details-table > tbody');
-  let clone = temp.content.cloneNode(true);
-  clone.querySelector('tr').id = 'newest-node';
-  tbody.appendChild(clone);
+/* Adds an item object to the items collection in firestore */
+function addItemToFirestore(data) {
+  userRef.collection('items').add(data);
+}
 
-  let node = tbody.querySelector('#newest-node');
+function addItemRow(data) {
+  console.log('added!');
+  let clone = rowTemplate.content.cloneNode(true);
+  clone.querySelector('tr').id = 'newest-node';
+  detailsTbody.appendChild(clone);
+
+  let node = detailsTbody.querySelector('#newest-node');
 
   let dateString = data.date.substring(5, 7) + '/' +
                    data.date.substring(8, 10) + '/' +
@@ -128,7 +153,7 @@ function addItem(data) {
   deleteButton.addEventListener('click', () => {
     if(confirm('Delete this item?')) {
       console.log('deleted!');
-      tbody.removeChild(node);
+      detailsTbody.removeChild(node);
     }
   });
 
@@ -145,6 +170,7 @@ function updateTotals() {
       totalIncome += parseFloat(n.textContent);
   });
   totalIn.textContent = totalIncome;
+  userRef.update({ totalIncome: totalIncome });
 
   let expenseValues = detailsTable.querySelectorAll('.expense-text');
   let totalExpense = 0;
@@ -153,17 +179,24 @@ function updateTotals() {
       totalExpense += parseFloat(n.textContent);
   });
   totalOut.textContent = totalExpense;
+  userRef.update({ totalExpense: totalExpense });
 
   totalChange.textContent = totalIncome - totalExpense;
+  userRef.update({ totalChange: totalIncome - totalExpense });
 }
 
 //----------------------------------------------------------------------------
-const testUserRef = firestore.collection('users').doc('testuser');
-testUserRef.get().then(doc => {
+
+userRef.collection('items').orderBy('date').get().then(querySnapshot => {
+  rebuildTable(querySnapshot);
+  querySnapshot.forEach(doc => {
+    console.log("Document data:", doc.data());
+  });
+});
+
+userRef.get().then(doc => {
   if (doc.exists) {
     console.log("Document data:", doc.data());
-    buildTable(doc.data().items);
-    updateTotals();
     totalIn.textContent = doc.data().totalIncome;
     totalOut.textContent = doc.data().totalExpense;
     totalChange.textContent = doc.data().totalIncome - doc.data().totalExpense;
@@ -171,24 +204,28 @@ testUserRef.get().then(doc => {
     console.log("No such document!");
   }
 }).catch(err => {
-  console.log("Error getting document:", err);
+  console.log("Error getting document:", error);
 });
 
 inputForm.addEventListener('submit', event => {
   event.preventDefault();
-  addItem(readForm());
+  let newItem = readAddForm();
+  addItemRow(newItem);
+  addItemToFirestore(newItem);
   inputForm.classList.add('hidden');
-  clearForm();
+  clearAddForm();
 });
 
 addButton.addEventListener('click', () => {
   inputForm.classList.toggle('hidden');
-  clearForm();
+  clearAddForm();
+  let d = new Date();
+  document.getElementById('date-input').value = d.toJSON().substring(0, 10);
 });
 
 cancelButton.addEventListener('click', () => {
   inputForm.classList.add('hidden');
-  clearForm();
+  clearAddForm();
 });
 
 let d = new Date();

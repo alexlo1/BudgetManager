@@ -23,11 +23,11 @@
           <tbody>
             <tr>
               <td><label for="date-input">Date:</label></td>
-              <td><input type="date" id="date-input"></td>
+              <td><input type="date" id="date-input" required></td>
             </tr>
             <tr>
               <td><label for="category-input">Category:</label></td>
-              <td><input type="text" id="category-input"></td>
+              <td><input type="text" id="category-input" required></td>
             </tr>
             <tr>
               <td><label for="name-input">Name:</label></td>
@@ -58,7 +58,7 @@
             <th class="button-col"></th>
           </tr>
         </thead>
-        <tbody>
+        <tbody id="details-tbody">
           <template id="row-template">
             <tr>
               <td class="date-col">
