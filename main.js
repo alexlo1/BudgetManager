@@ -66,7 +66,6 @@ function addItemToFirestore(data) {
 }
 
 function addItemRow(data) {
-  console.log('added!');
   let clone = rowTemplate.content.cloneNode(true);
   clone.querySelector('tr').id = 'newest-node';
   detailsTbody.appendChild(clone);
@@ -94,7 +93,6 @@ function addItemRow(data) {
   let deleteButton = node.querySelector('.delete-button');
 
   editButton.addEventListener('click', () => {
-    console.log('edited!');
     editButton.classList.toggle('hidden');
     saveButton.classList.toggle('hidden');
 
@@ -121,7 +119,6 @@ function addItemRow(data) {
   });
 
   saveButton.addEventListener('click', () => {
-    console.log('saved!');
     saveButton.classList.toggle('hidden');
     editButton.classList.toggle('hidden');
 
@@ -152,8 +149,20 @@ function addItemRow(data) {
 
   deleteButton.addEventListener('click', () => {
     if(confirm('Delete this item?')) {
-      console.log('deleted!');
       detailsTbody.removeChild(node);
+
+      userRef.collection('items')
+        .where('date', '==', data.date)
+        .where('category', '==', data.category)
+        .where('name', '==', data.name)
+        .where('income', '==', data.income)
+        .where('expense', '==', data.expense)
+        .get().then(querySnapshot => {
+          querySnapshot.forEach(doc => {
+            doc.ref.delete();
+          });
+      });
+      updateTotals();
     }
   });
 
