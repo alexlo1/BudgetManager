@@ -144,6 +144,24 @@ function addItemRow(data) {
     node.querySelector('.income-text').classList.remove('hidden');
     node.querySelector('.expense-text').classList.remove('hidden');
 
+    userRef.collection('items')
+      .where('date', '==', data.date)
+      .where('category', '==', data.category)
+      .where('name', '==', data.name)
+      .where('income', '==', data.income)
+      .where('expense', '==', data.expense)
+      .get().then(querySnapshot => {
+        querySnapshot.forEach(doc => {
+          doc.ref.update({
+            date: dateString,
+            category: node.querySelector('.category-edit').value,
+            name: node.querySelector('.name-edit').value,
+            income: node.querySelector('.income-edit').value,
+            expense: node.querySelector('.expense-edit').value
+          });
+        });
+      });
+
     updateTotals();
   });
 
