@@ -1,3 +1,5 @@
+const itemFields = ['date', 'category', 'name', 'income', 'expense'];
+
 const detailsTable = document.getElementById('details-table');
 const detailsTbody = document.getElementById('details-tbody');
 const rowTemplate = document.getElementById('row-template');
@@ -23,8 +25,9 @@ const userRef = testUserRef;
 /* Uses the firebase data snapshot to add each item to the table */
 function buildTable(snapshot) {
   snapshot.forEach(doc => {
-    addItemRow(doc.data());
+    addItem(doc.data());
   });
+  updateTotals();
 }
 
 /* First clears table rows
@@ -36,6 +39,11 @@ function rebuildTable(snapshot) {
     detailsTbody.removeChild(detailsTbody.lastChild);
   }
   buildTable(snapshot);
+}
+
+/* Set up initial totals and stats with data in firestore */
+function initializeGlobals() {
+
 }
 
 /* Clears the add item input form */
@@ -65,26 +73,59 @@ function addItemToFirestore(data) {
   userRef.collection('items').add(data);
 }
 
-function addItemRow(data) {
+/* Edits an item object in the items collection in firestore */
+function editItemInFirestore(node, data) {
+  //let node = document.getElementById(JSON.stringify(data));
+  userRef.collection('items')
+    .where('date', '==', data.date)
+    .where('category', '==', data.category)
+    .where('name', '==', data.name)
+    .where('income', '==', data.income)
+    .where('expense', '==', data.expense)
+    .get().then(querySnapshot => {
+      querySnapshot.forEach(doc => {
+        let incomeString = node.querySelector('.income-edit').value;
+        let expenseString = node.querySelector('.expense-edit').value;
+        doc.ref.update({
+          date: node.querySelector('.date-edit').value,
+          category: node.querySelector('.category-edit').value,
+          name: node.querySelector('.name-edit').value,
+          income: incomeString ? parseFloat(incomeString) : 0,
+          expense: expenseString ? parseFloat(expenseString) : 0
+        });
+      });
+    });
+}
+
+/* Deletes an item object from the items collection in firestore */
+function deleteItemFromFirestore(data) {
+  userRef.collection('items')
+    .where('date', '==', data.date)
+    .where('category', '==', data.category)
+    .where('name', '==', data.name)
+    .where('income', '==', data.income)
+    .where('expense', '==', data.expense)
+    .get().then(querySnapshot => {
+      querySnapshot.forEach(doc => {
+        doc.ref.delete();
+      });
+  });
+}
+
+function addItem(data) {
   let clone = rowTemplate.content.cloneNode(true);
   clone.querySelector('tr').id = 'newest-node';
   detailsTbody.appendChild(clone);
 
   let node = detailsTbody.querySelector('#newest-node');
 
-  let dateString = data.date.substring(5, 7) + '/' +
-                   data.date.substring(8, 10) + '/' +
-                   data.date.substring(0, 4);
+  let dateString = dateDashToSlash(data.date);
   if(dateString === '//') dateString = '';
   node.querySelector('.date-text').textContent = dateString;
-
   node.querySelector('.category-text').textContent = data.category;
-
   node.querySelector('.name-text').textContent = data.name;
-
   if(data.income > 0)
     node.querySelector('.income-text').textContent = data.income;
-
   if(data.expense > 0)
     node.querySelector('.expense-text').textContent = data.expense;
 
@@ -93,99 +134,47 @@ function addItemRow(data) {
   let deleteButton = node.querySelector('.delete-button');
 
   editButton.addEventListener('click', () => {
-    editButton.classList.toggle('hidden');
-    saveButton.classList.toggle('hidden');
-
-    node.querySelector('.date-text').classList.add('hidden');
-    node.querySelector('.category-text').classList.add('hidden');
-    node.querySelector('.name-text').classList.add('hidden');
-    node.querySelector('.income-text').classList.add('hidden');
-    node.querySelector('.expense-text').classList.add('hidden');
-
-    let dateString = node.querySelector('.date-text').textContent.substring(6, 10) + '-' +
-                     node.querySelector('.date-text').textContent.substring(0, 2) + '-' +
-                     node.querySelector('.date-text').textContent.substring(3, 5);
-    node.querySelector('.date-edit').value = dateString;
-    node.querySelector('.category-edit').value = node.querySelector('.category-text').textContent;
-    node.querySelector('.name-edit').value = node.querySelector('.name-text').textContent;
-    node.querySelector('.income-edit').value = node.querySelector('.income-text').textContent;
-    node.querySelector('.expense-edit').value = node.querySelector('.expense-text').textContent;
-
-    node.querySelector('.date-edit').classList.remove('hidden');
-    node.querySelector('.category-edit').classList.remove('hidden');
-    node.querySelector('.name-edit').classList.remove('hidden');
-    node.querySelector('.income-edit').classList.remove('hidden');
-    node.querySelector('.expense-edit').classList.remove('hidden');
+    editItem(node, data);
   });
 
   saveButton.addEventListener('click', () => {
-    saveButton.classList.toggle('hidden');
-    editButton.classList.toggle('hidden');
-
-    node.querySelector('.date-edit').classList.add('hidden');
-    node.querySelector('.category-edit').classList.add('hidden');
-    node.querySelector('.name-edit').classList.add('hidden');
-    node.querySelector('.income-edit').classList.add('hidden');
-    node.querySelector('.expense-edit').classList.add('hidden');
-
-    let dateString = node.querySelector('.date-edit').value.substring(5, 7) + '/' +
-                     node.querySelector('.date-edit').value.substring(8, 10) + '/' +
-                     node.querySelector('.date-edit').value.substring(0, 4);
-    if(dateString === '//') dateString = '';
-    node.querySelector('.date-text').textContent = dateString;
-    node.querySelector('.category-text').textContent = node.querySelector('.category-edit').value;
-    node.querySelector('.name-text').textContent = node.querySelector('.name-edit').value;
-    node.querySelector('.income-text').textContent = node.querySelector('.income-edit').value;
-    node.querySelector('.expense-text').textContent = node.querySelector('.expense-edit').value;
-
-    node.querySelector('.date-text').classList.remove('hidden');
-    node.querySelector('.category-text').classList.remove('hidden');
-    node.querySelector('.name-text').classList.remove('hidden');
-    node.querySelector('.income-text').classList.remove('hidden');
-    node.querySelector('.expense-text').classList.remove('hidden');
-
-    userRef.collection('items')
-      .where('date', '==', data.date)
-      .where('category', '==', data.category)
-      .where('name', '==', data.name)
-      .where('income', '==', data.income)
-      .where('expense', '==', data.expense)
-      .get().then(querySnapshot => {
-        querySnapshot.forEach(doc => {
-          doc.ref.update({
-            date: dateString,
-            category: node.querySelector('.category-edit').value,
-            name: node.querySelector('.name-edit').value,
-            income: node.querySelector('.income-edit').value,
-            expense: node.querySelector('.expense-edit').value
-          });
-        });
-      });
-
-    updateTotals();
+    saveItem(node, data);
   });
 
   deleteButton.addEventListener('click', () => {
-    if(confirm('Delete this item?')) {
-      detailsTbody.removeChild(node);
-
-      userRef.collection('items')
-        .where('date', '==', data.date)
-        .where('category', '==', data.category)
-        .where('name', '==', data.name)
-        .where('income', '==', data.income)
-        .where('expense', '==', data.expense)
-        .get().then(querySnapshot => {
-          querySnapshot.forEach(doc => {
-            doc.ref.delete();
-          });
-      });
-      updateTotals();
-    }
+    if(confirm('Delete this item?')) deleteItem(node, data);
   });
 
   node.id = '';
+}
 
+function editItem(node, data) {
+  toggleEditSave(node);
+
+  itemFields.forEach(f => {
+    node.querySelector('.'+f+'-edit').value = node.querySelector('.'+f+'-text').textContent;
+  });
+
+  node.querySelector('.date-edit').value = dateSlashToDash(node.querySelector('.date-text').textContent);
+}
+
+function saveItem(node, data) {
+  toggleEditSave(node);
+
+  itemFields.forEach(f => {
+    node.querySelector('.'+f+'-text').textContent = node.querySelector('.'+f+'-edit').value;
+  });
+
+  let dateString = dateDashToSlash(node.querySelector('.date-edit').value);
+  node.querySelector('.date-text').textContent = (dateString === '//') ? '' : dateString;
+
+  editItemInFirestore(node, data);
+  updateTotals();
+}
+
+function deleteItem(node, data) {
+  detailsTbody.removeChild(node);
+  deleteItemFromFirestore(data);
   updateTotals();
 }
 
@@ -212,18 +201,44 @@ function updateTotals() {
   userRef.update({ totalChange: totalIncome - totalExpense });
 }
 
+/* Toggles between the edit and save buttons
+ * Reveals/hides the text/edit forms
+ */
+function toggleEditSave(node) {
+  node.querySelector('.edit-button').classList.toggle('hidden');
+  node.querySelector('.save-button').classList.toggle('hidden');
+
+  itemFields.forEach(f => {
+    node.querySelector('.'+f+'-text').classList.toggle('hidden');
+    node.querySelector('.'+f+'-edit').classList.toggle('hidden');
+  });
+}
+
+/* Converts mm/dd/yyyy to yyyy-mm-dd */
+function dateSlashToDash(dateString) {
+  return dateString.substring(6, 10) + '-' +
+         dateString.substring(0, 2) + '-' +
+         dateString.substring(3, 5);
+}
+
+/* Converts yyyy-mm-dd to mm/dd/yyyy */
+function dateDashToSlash(dateString) {
+  return dateString.substring(5, 7) + '/' +
+         dateString.substring(8, 10) + '/' +
+         dateString.substring(0, 4);
+}
+
 //----------------------------------------------------------------------------
 
 userRef.collection('items').orderBy('date').get().then(querySnapshot => {
   rebuildTable(querySnapshot);
   querySnapshot.forEach(doc => {
-    console.log("Document data:", doc.data());
+    // console.log("Document data:", doc.data());
   });
 });
 
 userRef.get().then(doc => {
   if (doc.exists) {
-    console.log("Document data:", doc.data());
     totalIn.textContent = doc.data().totalIncome;
     totalOut.textContent = doc.data().totalExpense;
     totalChange.textContent = doc.data().totalIncome - doc.data().totalExpense;
@@ -237,10 +252,10 @@ userRef.get().then(doc => {
 inputForm.addEventListener('submit', event => {
   event.preventDefault();
   let newItem = readAddForm();
-  addItemRow(newItem);
+  addItem(newItem);
   addItemToFirestore(newItem);
   inputForm.classList.add('hidden');
-  clearAddForm();
+  updateTotals();
 });
 
 addButton.addEventListener('click', () => {
@@ -252,8 +267,4 @@ addButton.addEventListener('click', () => {
 
 cancelButton.addEventListener('click', () => {
   inputForm.classList.add('hidden');
-  clearAddForm();
 });
-
-let d = new Date();
-document.getElementById('date-input').value = d.toJSON().substring(0, 10);
