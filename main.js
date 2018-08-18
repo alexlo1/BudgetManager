@@ -19,9 +19,6 @@ const addButton = document.getElementById('add-button');
 const submitButton = document.getElementById('submit-input');
 const cancelButton = document.getElementById('cancel-input');
 
-const testUserRef = firestore.collection('users').doc('testuser');
-const userRef = testUserRef;
-
 /* Uses the firebase data snapshot to add each item to the table */
 function buildTable(snapshot) {
   snapshot.forEach(doc => {
@@ -39,11 +36,6 @@ function rebuildTable(snapshot) {
     detailsTbody.removeChild(detailsTbody.lastChild);
   }
   buildTable(snapshot);
-}
-
-/* Set up initial totals and stats with data in firestore */
-function initializeGlobals() {
-
 }
 
 /* Clears the add item input form */
@@ -75,7 +67,6 @@ function addItemToFirestore(data) {
 
 /* Edits an item object in the items collection in firestore */
 function editItemInFirestore(node, data) {
-  //let node = document.getElementById(JSON.stringify(data));
   userRef.collection('items')
     .where('date', '==', data.date)
     .where('category', '==', data.category)
@@ -229,25 +220,42 @@ function dateDashToSlash(dateString) {
 }
 
 //----------------------------------------------------------------------------
+let userEmail = 'testuser';
+let userRef = firestore.collection('users').doc(userEmail);
 
-userRef.collection('items').orderBy('date').get().then(querySnapshot => {
-  rebuildTable(querySnapshot);
-  querySnapshot.forEach(doc => {
-    // console.log("Document data:", doc.data());
-  });
-});
-
-userRef.get().then(doc => {
-  if (doc.exists) {
-    totalIn.textContent = doc.data().totalIncome;
-    totalOut.textContent = doc.data().totalExpense;
-    totalChange.textContent = doc.data().totalIncome - doc.data().totalExpense;
+firebase.auth().onAuthStateChanged(user => {
+  if (user) {
+    userEmail = user.email;
+    userRef = firestore.collection('users').doc(userEmail);
+    setup(userRef);
   } else {
-    console.log("No such document!");
+    setup(userRef);
   }
-}).catch(err => {
-  console.log("Error getting document:", error);
 });
+
+function setup(userRef) {
+  userRef.get().then(doc => {
+    if (doc.exists) {
+      totalIn.textContent = doc.data().totalIncome;
+      totalOut.textContent = doc.data().totalExpense;
+      totalChange.textContent = doc.data().totalIncome - doc.data().totalExpense;
+    } else {
+      userRef.set({
+        firstDay: '',
+        totalChange: 0,
+        totalIncome: 0,
+        totalExpense: 0
+      });
+    }
+  }).catch(err => {
+    console.log("Error getting document:", error);
+  });
+
+  userRef.collection('items').orderBy('date').get().then(querySnapshot => {
+    rebuildTable(querySnapshot);
+    // querySnapshot.forEach(doc => {console.log("Document data:", doc.data());});
+  });
+}
 
 inputForm.addEventListener('submit', event => {
   event.preventDefault();
