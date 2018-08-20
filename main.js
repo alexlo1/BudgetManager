@@ -1,3 +1,5 @@
+const MS_IN_DAY = 86400000;
+
 const itemFields = ['date', 'category', 'name', 'income', 'expense'];
 
 const detailsTable = document.getElementById('details-table');
@@ -7,6 +9,8 @@ const rowTemplate = document.getElementById('row-template');
 const totalIn = document.getElementById('total-in');
 const totalOut = document.getElementById('total-out');
 const totalChange = document.getElementById('total-change');
+const firstDay = document.getElementById('first-day');
+const totalDays = document.getElementById('total-days');
 
 const inputForm = document.getElementById('input-form');
 const inputDate = document.getElementById('date-input');
@@ -19,12 +23,19 @@ const addButton = document.getElementById('add-button');
 const submitButton = document.getElementById('submit-input');
 const cancelButton = document.getElementById('cancel-input');
 
+const avgDayIn = document.getElementById('avg-day-in');
+const avgDayOut = document.getElementById('avg-day-out');
+const avgDayNet = document.getElementById('avg-day-net');
+const avgWeekIn = document.getElementById('avg-week-in');
+const avgWeekOut = document.getElementById('avg-week-out');
+const avgWeekNet = document.getElementById('avg-week-net');
+
 /* Uses the firebase data snapshot to add each item to the table */
 function buildTable(snapshot) {
   snapshot.forEach(doc => {
     addItem(doc.data());
   });
-  updateTotals();
+  updateStats();
 }
 
 /* First clears table rows
@@ -55,8 +66,8 @@ function readAddForm() {
     date: inputDate.value,
     category: inputCategory.value,
     name: inputName.value,
-    income: inputIncome.value,
-    expense: inputExpense.value,
+    income: inputIncome.value ? parseFloat(inputIncome.value) : 0,
+    expense: inputExpense.value ? parseFloat(inputExpense.value) : 0
   };
 }
 
@@ -103,6 +114,9 @@ function deleteItemFromFirestore(data) {
   });
 }
 
+/* When the add item submit button is clicked
+ * Create a row in the details table for an item object
+ */
 function addItem(data) {
   let clone = rowTemplate.content.cloneNode(true);
   clone.querySelector('tr').id = 'newest-node';
@@ -139,6 +153,9 @@ function addItem(data) {
   node.id = '';
 }
 
+/* When the edit button is clicked
+ * Toggle text to edit form
+ */
 function editItem(node, data) {
   toggleEditSave(node);
 
@@ -149,6 +166,9 @@ function editItem(node, data) {
   node.querySelector('.date-edit').value = dateSlashToDash(node.querySelector('.date-text').textContent);
 }
 
+/* When the save button is clicked
+ * Toggle edit form to text and update firestore
+ */
 function saveItem(node, data) {
   toggleEditSave(node);
 
@@ -160,22 +180,27 @@ function saveItem(node, data) {
   node.querySelector('.date-text').textContent = (dateString === '//') ? '' : dateString;
 
   editItemInFirestore(node, data);
-  updateTotals();
+  updateStats();
 }
 
 function deleteItem(node, data) {
   detailsTbody.removeChild(node);
   deleteItemFromFirestore(data);
-  updateTotals();
+  updateStats();
 }
 
-function updateTotals() {
+/* Update in firestore:
+ * Net change, total income and total expenses
+ * First day, number of days
+ */
+function updateStats() {
   let incomeValues = detailsTable.querySelectorAll('.income-text');
   let totalIncome = 0;
   incomeValues.forEach(n => {
     if(n.textContent)
       totalIncome += parseFloat(n.textContent);
   });
+  totalIncome = roundToCent(totalIncome);
   totalIn.textContent = totalIncome;
   userRef.update({ totalIncome: totalIncome });
 
@@ -185,11 +210,39 @@ function updateTotals() {
     if(n.textContent)
       totalExpense += parseFloat(n.textContent);
   });
+  totalExpense = roundToCent(totalExpense);
   totalOut.textContent = totalExpense;
   userRef.update({ totalExpense: totalExpense });
 
-  totalChange.textContent = totalIncome - totalExpense;
-  userRef.update({ totalChange: totalIncome - totalExpense });
+  let netChange = roundToCent(totalIncome - totalExpense)
+  totalChange.textContent = netChange;
+  userRef.update({ totalChange: netChange });
+
+  // update first day/number of days
+  let dates = detailsTable.querySelectorAll('.date-text');
+  let first = (new Date()).toJSON().substring(0, 10);
+  let diff = 1;
+  dates.forEach(d => {
+    if(d.textContent) {
+      let t1 = new Date(dateSlashToDash(d.textContent));
+      let t2 = new Date(first);
+      if(t1.getTime() < t2.getTime()) {
+        first = t1.toJSON().substring(0, 10);
+        diff = (t2.getTime() - t1.getTime()) / MS_IN_DAY;
+      }
+    }
+  });
+  firstDay.textContent = dateDashToSlash(first);
+  userRef.update({ firstDay: first });
+  totalDays.textContent = diff + 1;
+  userRef.update({ totalDays: diff + 1 });
+
+  avgDayIn.textContent = roundToCent(totalIncome / (diff + 1));
+  avgDayOut.textContent = roundToCent(totalExpense / (diff + 1));
+  avgDayNet.textContent = roundToCent(netChange / (diff + 1));
+  avgWeekIn.textContent = roundToCent(totalIncome / (diff + 1) * 7);
+  avgWeekOut.textContent = roundToCent(totalExpense / (diff + 1) * 7);
+  avgWeekNet.textContent = roundToCent(netChange / (diff + 1) * 7);
 }
 
 /* Toggles between the edit and save buttons
@@ -219,6 +272,10 @@ function dateDashToSlash(dateString) {
          dateString.substring(0, 4);
 }
 
+function roundToCent(n) {
+  return Math.round(n*100)/100;
+}
+
 //----------------------------------------------------------------------------
 let userEmail = 'testuser';
 let userRef = firestore.collection('users').doc(userEmail);
@@ -239,16 +296,25 @@ function setup(userRef) {
       totalIn.textContent = doc.data().totalIncome;
       totalOut.textContent = doc.data().totalExpense;
       totalChange.textContent = doc.data().totalIncome - doc.data().totalExpense;
+      firstDay.textContent = dateDashToSlash(doc.data().firstDay);
+
+      let first = new Date(doc.data().firstDay);
+      let today = new Date();
+      today = new Date(today.toJSON().substring(0, 10));
+
+      let diff = (today.getTime() - first.getTime()) / MS_IN_DAY;
+      totalDays.textContent = diff + 1;
     } else {
       userRef.set({
-        firstDay: '',
         totalChange: 0,
         totalIncome: 0,
-        totalExpense: 0
+        totalExpense: 0,
+        firstDay: (new Date()).toJSON().substring(0, 10),
+        totalDays: 1
       });
     }
   }).catch(err => {
-    console.log("Error getting document:", error);
+    console.log("Error getting document:", err);
   });
 
   userRef.collection('items').orderBy('date').get().then(querySnapshot => {
@@ -263,7 +329,7 @@ inputForm.addEventListener('submit', event => {
   addItem(newItem);
   addItemToFirestore(newItem);
   inputForm.classList.add('hidden');
-  updateTotals();
+  updateStats();
 });
 
 addButton.addEventListener('click', () => {
