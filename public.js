@@ -30,15 +30,15 @@ const avgWeekIn = document.getElementById('avg-week-in');
 const avgWeekOut = document.getElementById('avg-week-out');
 const avgWeekNet = document.getElementById('avg-week-net');
 
-/* Uses the data to add each item to the table */
+/* Use the data to add each item to the table */
 function buildTable(data) {
   data.forEach(i => {
     addItem(i);
   });
 }
 
-/* First clears table rows
- * Then uses the data to add each item to the table
+/* First clear table rows
+ * Then use the data to add each item to the table
  */
 function rebuildTable(data) {
   while (detailsTbody.lastChild) {
@@ -48,7 +48,7 @@ function rebuildTable(data) {
   buildTable(data);
 }
 
-/* Clears the add item input form */
+/* Clear the add item input form */
 function clearAddForm() {
   inputDate.value = '';
   inputCategory.value = '';
@@ -57,7 +57,7 @@ function clearAddForm() {
   inputExpense.value = 0;
 }
 
-/* Reads the add item input form
+/* Read the add item input form
  * Returns an [item] object
  */
 function readAddForm() {
@@ -123,7 +123,7 @@ function editItem(node, data) {
 }
 
 /* When the save button is clicked
- * Toggle edit form to text and update firestore
+ * Toggle edit form to text
  */
 function saveItem(node, data) {
   toggleEditSave(node);
@@ -138,6 +138,9 @@ function saveItem(node, data) {
   updateStats();
 }
 
+/* When delete order is confirmed
+ * Remove row from table
+ */
 function deleteItem(node, data) {
   detailsTbody.removeChild(node);
   updateStats();
@@ -148,6 +151,7 @@ function deleteItem(node, data) {
  * First day, number of days
  */
 function updateStats() {
+  // calculate total income, update text
   let incomeValues = detailsTable.querySelectorAll('.income-text');
   let totalIncome = 0;
   incomeValues.forEach(n => {
@@ -157,6 +161,7 @@ function updateStats() {
   totalIncome = roundToCent(totalIncome);
   totalIn.textContent = totalIncome;
 
+  // calculate total expense, update text
   let expenseValues = detailsTable.querySelectorAll('.expense-text');
   let totalExpense = 0;
   expenseValues.forEach(n => {
@@ -166,18 +171,20 @@ function updateStats() {
   totalExpense = roundToCent(totalExpense);
   totalOut.textContent = totalExpense;
 
+  // calculate total change, update text
   let netChange = roundToCent(totalIncome - totalExpense)
   totalChange.textContent = netChange;
 
-  // update first day/number of days
+  // calculate first day and number of days, update text
   let dates = detailsTable.querySelectorAll('.date-text');
   let first = (new Date()).toJSON().substring(0, 10);
+  let today = (new Date()).toJSON().substring(0, 10);
   let diff = 1;
   dates.forEach(d => {
     if(d.textContent) {
       let t1 = new Date(dateSlashToDash(d.textContent));
-      let t2 = new Date(first);
-      if(t1.getTime() < t2.getTime()) {
+      let t2 = new Date(today);
+      if((t2.getTime() - t1.getTime()) / MS_IN_DAY > diff) {
         first = t1.toJSON().substring(0, 10);
         diff = (t2.getTime() - t1.getTime()) / MS_IN_DAY;
       }
@@ -186,6 +193,7 @@ function updateStats() {
   firstDay.textContent = dateDashToSlash(first);
   totalDays.textContent = diff + 1;
 
+  // update stats section
   avgDayIn.textContent = roundToCent(totalIncome / (diff + 1));
   avgDayOut.textContent = roundToCent(totalExpense / (diff + 1));
   avgDayNet.textContent = roundToCent(netChange / (diff + 1));
@@ -221,12 +229,13 @@ function dateDashToSlash(dateString) {
          dateString.substring(0, 4);
 }
 
+/* Round to the nearest cent (2 decimal places) */
 function roundToCent(n) {
   return Math.round(n*100)/100;
 }
 
 //----------------------------------------------------------------------------
-
+// test data
 const data = [
   {
     date: '2018-08-11',
@@ -268,6 +277,9 @@ const data = [
 buildTable(data);
 updateStats();
 
+/* When add form is submitted
+ * Add item to table and firestore
+ */
 inputForm.addEventListener('submit', event => {
   event.preventDefault();
   let newItem = readAddForm();
@@ -276,6 +288,9 @@ inputForm.addEventListener('submit', event => {
   updateStats();
 });
 
+/* When add button is clicked
+ * Display the add item form
+ */
 addButton.addEventListener('click', () => {
   inputForm.classList.toggle('hidden');
   clearAddForm();
@@ -283,6 +298,9 @@ addButton.addEventListener('click', () => {
   document.getElementById('date-input').value = d.toJSON().substring(0, 10);
 });
 
+/* When cancel button is clicked
+ * Hide the add item form
+ */
 cancelButton.addEventListener('click', () => {
   inputForm.classList.add('hidden');
 });

@@ -65,7 +65,10 @@ guestButton.addEventListener('click', () => {
 });
 
 loginButton.addEventListener('click', () => {
-  login(email.value, password.value);
+  if(email.value === '' && password.value === '')
+    login('test@gmail.com', 'testtest');
+  else
+    login(email.value, password.value);
 });
 
 signupButton.addEventListener('click', () => {

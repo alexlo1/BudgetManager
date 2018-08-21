@@ -22,6 +22,7 @@ const inputExpense = document.getElementById('expense-input');
 const addButton = document.getElementById('add-button');
 const submitButton = document.getElementById('submit-input');
 const cancelButton = document.getElementById('cancel-input');
+const refreshButton = document.getElementById('refresh-button');
 
 const avgDayIn = document.getElementById('avg-day-in');
 const avgDayOut = document.getElementById('avg-day-out');
@@ -30,7 +31,47 @@ const avgWeekIn = document.getElementById('avg-week-in');
 const avgWeekOut = document.getElementById('avg-week-out');
 const avgWeekNet = document.getElementById('avg-week-net');
 
-/* Uses the firebase data snapshot to add each item to the table */
+/* When user is signed in
+ * Get or create user doc from/in firestore
+ * Use stats in firestore to display in appropriate text areas
+ * Build details table
+ */
+function setup(userRef) {
+  userRef.get().then(doc => {
+    if (doc.exists) {
+      totalIn.textContent = doc.data().totalIncome;
+      totalOut.textContent = doc.data().totalExpense;
+      totalChange.textContent = doc.data().totalIncome - doc.data().totalExpense;
+      firstDay.textContent = dateDashToSlash(doc.data().firstDay);
+
+      let first = new Date(doc.data().firstDay);
+      let today = new Date();
+      today = new Date(today.toJSON().substring(0, 10));
+
+      let diff = (today.getTime() - first.getTime()) / MS_IN_DAY;
+      totalDays.textContent = diff + 1;
+    } else {
+      userRef.set({
+        totalChange: 0,
+        totalIncome: 0,
+        totalExpense: 0,
+        firstDay: (new Date()).toJSON().substring(0, 10),
+        totalDays: 1
+      });
+    }
+  }).catch(err => {
+    console.log("Error getting document:", err);
+  });
+
+  userRef.collection('items').orderBy('date').get().then(querySnapshot => {
+    rebuildTable(querySnapshot);
+    // querySnapshot.forEach(doc => {console.log("Document data:", doc.data());});
+  });
+}
+
+/* Use the firebase data snapshot to add each item to the table
+ *
+ */
 function buildTable(snapshot) {
   snapshot.forEach(doc => {
     addItem(doc.data());
@@ -38,8 +79,8 @@ function buildTable(snapshot) {
   updateStats();
 }
 
-/* First clears table rows
- * Then uses the firebase data snapshot to add each item to the table
+/* First clear table rows
+ * Then use the firebase data snapshot to add each item to the table
  */
 function rebuildTable(snapshot) {
   while (detailsTbody.lastChild) {
@@ -49,7 +90,7 @@ function rebuildTable(snapshot) {
   buildTable(snapshot);
 }
 
-/* Clears the add item input form */
+/* Clear the add item input form */
 function clearAddForm() {
   inputDate.value = '';
   inputCategory.value = '';
@@ -58,8 +99,8 @@ function clearAddForm() {
   inputExpense.value = 0;
 }
 
-/* Reads the add item input form
- * Returns an [item] object
+/* Read the add item input form
+ * Return an [item] object
  */
 function readAddForm() {
   return {
@@ -71,12 +112,12 @@ function readAddForm() {
   };
 }
 
-/* Adds an item object to the items collection in firestore */
+/* Add an item object to the items collection in firestore */
 function addItemToFirestore(data) {
   userRef.collection('items').add(data);
 }
 
-/* Edits an item object in the items collection in firestore */
+/* Edit an item object in the items collection in firestore */
 function editItemInFirestore(node, data) {
   userRef.collection('items')
     .where('date', '==', data.date)
@@ -99,7 +140,7 @@ function editItemInFirestore(node, data) {
     });
 }
 
-/* Deletes an item object from the items collection in firestore */
+/* Delete an item object from the items collection in firestore */
 function deleteItemFromFirestore(data) {
   userRef.collection('items')
     .where('date', '==', data.date)
@@ -183,6 +224,9 @@ function saveItem(node, data) {
   updateStats();
 }
 
+/* When delete order is confirmed
+ * Remove row from table and update firestore
+ */
 function deleteItem(node, data) {
   detailsTbody.removeChild(node);
   deleteItemFromFirestore(data);
@@ -194,6 +238,7 @@ function deleteItem(node, data) {
  * First day, number of days
  */
 function updateStats() {
+  // calculate total income, update text and firestore
   let incomeValues = detailsTable.querySelectorAll('.income-text');
   let totalIncome = 0;
   incomeValues.forEach(n => {
@@ -204,6 +249,7 @@ function updateStats() {
   totalIn.textContent = totalIncome;
   userRef.update({ totalIncome: totalIncome });
 
+  // calculate total expense, update text and firestore
   let expenseValues = detailsTable.querySelectorAll('.expense-text');
   let totalExpense = 0;
   expenseValues.forEach(n => {
@@ -214,29 +260,34 @@ function updateStats() {
   totalOut.textContent = totalExpense;
   userRef.update({ totalExpense: totalExpense });
 
+  // calculate total change, update text and firestore
   let netChange = roundToCent(totalIncome - totalExpense)
   totalChange.textContent = netChange;
   userRef.update({ totalChange: netChange });
 
-  // update first day/number of days
+  // calculate first day and number of days, update text and firestore
   let dates = detailsTable.querySelectorAll('.date-text');
   let first = (new Date()).toJSON().substring(0, 10);
+  let today = (new Date()).toJSON().substring(0, 10);
   let diff = 1;
   dates.forEach(d => {
     if(d.textContent) {
       let t1 = new Date(dateSlashToDash(d.textContent));
-      let t2 = new Date(first);
-      if(t1.getTime() < t2.getTime()) {
+      let t2 = new Date(today);
+      if((t2.getTime() - t1.getTime()) / MS_IN_DAY > diff) {
         first = t1.toJSON().substring(0, 10);
         diff = (t2.getTime() - t1.getTime()) / MS_IN_DAY;
       }
     }
   });
   firstDay.textContent = dateDashToSlash(first);
+  totalDays.textContent = diff + 1;
+  firstDay.textContent = dateDashToSlash(first);
   userRef.update({ firstDay: first });
   totalDays.textContent = diff + 1;
   userRef.update({ totalDays: diff + 1 });
 
+  // update stats section (not stored)
   avgDayIn.textContent = roundToCent(totalIncome / (diff + 1));
   avgDayOut.textContent = roundToCent(totalExpense / (diff + 1));
   avgDayNet.textContent = roundToCent(netChange / (diff + 1));
@@ -272,57 +323,27 @@ function dateDashToSlash(dateString) {
          dateString.substring(0, 4);
 }
 
+/* Round to the nearest cent (2 decimal places) */
 function roundToCent(n) {
   return Math.round(n*100)/100;
 }
 
 //----------------------------------------------------------------------------
-let userEmail = 'testuser';
+let userEmail = 'testuser'; // testing purposes only
 let userRef = firestore.collection('users').doc(userEmail);
 
+/* when(if) user is logged in, save user details and set up the page */
 firebase.auth().onAuthStateChanged(user => {
   if (user) {
     userEmail = user.email;
     userRef = firestore.collection('users').doc(userEmail);
-    setup(userRef);
-  } else {
-    setup(userRef);
   }
+  setup(userRef);
 });
 
-function setup(userRef) {
-  userRef.get().then(doc => {
-    if (doc.exists) {
-      totalIn.textContent = doc.data().totalIncome;
-      totalOut.textContent = doc.data().totalExpense;
-      totalChange.textContent = doc.data().totalIncome - doc.data().totalExpense;
-      firstDay.textContent = dateDashToSlash(doc.data().firstDay);
-
-      let first = new Date(doc.data().firstDay);
-      let today = new Date();
-      today = new Date(today.toJSON().substring(0, 10));
-
-      let diff = (today.getTime() - first.getTime()) / MS_IN_DAY;
-      totalDays.textContent = diff + 1;
-    } else {
-      userRef.set({
-        totalChange: 0,
-        totalIncome: 0,
-        totalExpense: 0,
-        firstDay: (new Date()).toJSON().substring(0, 10),
-        totalDays: 1
-      });
-    }
-  }).catch(err => {
-    console.log("Error getting document:", err);
-  });
-
-  userRef.collection('items').orderBy('date').get().then(querySnapshot => {
-    rebuildTable(querySnapshot);
-    // querySnapshot.forEach(doc => {console.log("Document data:", doc.data());});
-  });
-}
-
+/* When add form is submitted
+ * Add item to table and firestore
+ */
 inputForm.addEventListener('submit', event => {
   event.preventDefault();
   let newItem = readAddForm();
@@ -332,6 +353,9 @@ inputForm.addEventListener('submit', event => {
   updateStats();
 });
 
+/* When add button is clicked
+ * Display the add item form
+ */
 addButton.addEventListener('click', () => {
   inputForm.classList.toggle('hidden');
   clearAddForm();
@@ -339,6 +363,18 @@ addButton.addEventListener('click', () => {
   document.getElementById('date-input').value = d.toJSON().substring(0, 10);
 });
 
+/* When cancel button is clicked
+ * Hide the add item form
+ */
 cancelButton.addEventListener('click', () => {
   inputForm.classList.add('hidden');
+});
+
+/* When refresh button is clicked
+ * Rebuild the table (for re-sorting items after edits)
+ */
+refreshButton.addEventListener('click', () => {
+  userRef.collection('items').orderBy('date').get().then(querySnapshot => {
+    rebuildTable(querySnapshot);
+  });
 });
