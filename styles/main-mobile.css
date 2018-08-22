@@ -1,0 +1,34 @@
+html {
+  font-size: 10px;
+  min-height: 100vh;
+  background-color: #ffffff;
+  color: #111111;
+}
+
+body {
+  max-width: 700px;
+  width: 95%;
+  margin: auto;
+  padding: 5px;
+  border: none;
+  border-radius: 0;
+}
+
+th, td > span {
+  font-size: 1.5rem;
+}
+
+button, input[type=submit] {
+  width: 50px;
+  height: 20px;
+  border-radius: 5px;
+  font-size: 1.5rem;
+}
+
+#details-table {width: 100%;}
+.date-col {width: 15%;}
+.category-col {width: 15%;}
+.name-col {width: 10%;}
+.income-col {width: 10%;}
+.expense-col {width: 10%;}
+.button-col {width: 15%;}

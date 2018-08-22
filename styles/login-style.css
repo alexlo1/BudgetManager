@@ -12,17 +12,17 @@ html {
   font-size: 10px;
   min-height: 100vh;
   background-color: #79d8d8;
-  background-size: 100%;
+  background-size: 10%;
   background-image: linear-gradient(#eeeeff, #79d8d8);
   color: #111111;
 }
 
 body {
   width: 95%;
-  max-width: 600px;
+  max-width: 500px;
   margin: 20px auto;
   padding: 20px;
-  border: 1px solid #efefef;
+  border: none;
   border-radius: 20px;
   background-color: #ffffff;
   color: #111111;
@@ -55,4 +55,5 @@ button, input[type=submit] {
   color: #fff;
   border-radius: 5px;
   font-family: 'Open Sans', sans-serif;
+  cursor: pointer;
 }

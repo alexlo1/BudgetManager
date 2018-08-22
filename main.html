@@ -7,7 +7,8 @@
     content="Budget manager web app using firestore for login system."
     />
   <meta name="theme-color" content="#79d8d8">
-  <link rel="stylesheet" type="text/css" href="styles.css">
+  <link rel="stylesheet" type="text/css" href="styles/styles.css">
+  <link rel="stylesheet" type="text/css" href="styles/main-mobile.css" media="screen and (max-width:700px)">
   <title>Budget Manager</title>
 </head>
 <body>
@@ -159,6 +160,6 @@
     const settings = {timestampsInSnapshots: true};
     firestore.settings(settings);
   </script>
-  <script src="main.js"></script>
+  <script src="scripts/main.js"></script>
 </body>
 </html>

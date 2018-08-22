@@ -13,6 +13,7 @@ html {
   background-size: 100%;
   background-image: linear-gradient(#eeeeff, #79d8d8);
   color: #111111;
+  overflow-x: hidden;
 }
 
 body {
@@ -69,6 +70,7 @@ button, input[type=submit] {
   width: 60px;
   height: 25px;
   border-radius: 5px;
+  cursor: pointer;
 }
 
 .hidden {
