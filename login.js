@@ -6,6 +6,9 @@ const guestButton = document.getElementById('guest-button');
 const loginButton = document.getElementById('login-button');
 const signupButton = document.getElementById('signup-button');
 
+/* Log in a user with email and password
+ * Display error message if log in failed
+ */
 function login(email, password) {
   firebase.auth().signInWithEmailAndPassword(email, password)
     .then(() => {
@@ -32,6 +35,9 @@ function login(email, password) {
   });
 }
 
+/* Create a user account with email and password
+ * Display error message if sign up failed
+ */
 function signup(email, password) {
   firebase.auth().createUserWithEmailAndPassword(email, password)
     .then(() => {
@@ -58,12 +64,15 @@ function signup(email, password) {
   });
 }
 
+/* Sign out any currently signed in user */
 firebase.auth().signOut();
 
+/* Go to offline test page */
 guestButton.addEventListener('click', () => {
   window.location.href = 'public.html';
 });
 
+/* Verify and log in user with email and password */
 loginButton.addEventListener('click', () => {
   if(email.value === '' && password.value === '')
     login('test@gmail.com', 'testtest');
@@ -71,19 +80,19 @@ loginButton.addEventListener('click', () => {
     login(email.value, password.value);
 });
 
+/* Verify and sign up user with email and password */
 signupButton.addEventListener('click', () => {
   signup(email.value, password.value);
 });
 
+/* Prevent page from going to action */
 form.addEventListener('submit', event => {
   event.preventDefault();
 });
 
 // firebase.auth().onAuthStateChanged(function(user) {
 //   if (user) {
-//     var email = user.email;
-//     var uid = user.uid;
-//     console.log(user.email);
+//
 //   } else {
 //     console.log('no user');
 //   }
