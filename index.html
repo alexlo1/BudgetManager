@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width initial-scale=1.0">
-  <link rel="stylesheet" type="text/css" href="styles.css">
+  <link rel="stylesheet" type="text/css" href="login-style.css">
   <title>Budget Manager</title>
 </head>
 <body>
@@ -11,18 +11,29 @@
     <h1>Welcome to Budget Manager!</h1>
   </header>
   <main>
-    <button id="guest-button" class="frontpage">Start as Guest</button>
+    <hr>
+    <section>
+      <h3>Start As Guest (Offline)</h3>
+      <button id="guest-button">Start Now</button>
+    </section>
+    <br><hr>
     <section>
       <h3>Log In/Sign Up</h3>
       <form id="form">
-        <label for="email">Email: </label>
-        <input type="text" id="email" placeholder="test@gmail.com">
-        <br>
-        <label for="password">Password: </label>
-        <input type="password" id="password" placeholder="testtest">
-        <br>
-        <button type="submit" id="login-button" class="frontpage">Log In</button>
-        <button type="submit" id="signup-button" class="frontpage">Sign Up</button>
+        <table>
+          <tr>
+            <td><label for="email">Email: </label></td>
+            <td><input type="text" id="email" placeholder="test@gmail.com"></td>
+          </tr>
+          <tr>
+            <td><label for="password">Password: </label></td>
+            <td><input type="password" id="password" placeholder="testtest"></td>
+          </tr>
+          <tr>
+            <td><button type="submit" id="login-button">Log In</button></td>
+            <td><button type="submit" id="signup-button">Sign Up</button></td>
+          </tr>
+        </table>
       </form>
     </section>
   </main>
