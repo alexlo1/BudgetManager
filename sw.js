@@ -1,5 +1,5 @@
 let currentCache = {
-  offline: 'offline-cache2'
+  offline: 'offline-cache1'
 };
 
 this.addEventListener('install', event => {
