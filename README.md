@@ -2,7 +2,11 @@
 
 https://alexlo1.github.io/BudgetManager/  
 
+### Uses  
+- Sign up with an email and password
+- Record and view statistics about income and spending
+
 ### To Do  
 - Styling
-- PWA
-- Update this README
+- Implement more Service Worker functionality
+- Add categorical filtering / stats

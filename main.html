@@ -161,5 +161,17 @@
     firestore.settings(settings);
   </script>
   <script src="scripts/main.js"></script>
+  <script>
+    // Check that service workers are registered
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').then(registration => {
+          console.log('SW registered: ', registration);
+        }).catch(registrationError => {
+          console.log('SW registration failed: ', registrationError);
+        });
+      });
+    }
+  </script>
 </body>
 </html>
