@@ -97,12 +97,21 @@ function addItem(data) {
   editButton.addEventListener('click', () => {
     editItem(node, data);
   });
+  editButton.addEventListener('touchstart', () => {
+    editItem(node, data);
+  });
 
   saveButton.addEventListener('click', () => {
     saveItem(node, data);
   });
+  saveButton.addEventListener('touchstart', () => {
+    saveItem(node, data);
+  });
 
   deleteButton.addEventListener('click', () => {
+    if(confirm('Delete this item?')) deleteItem(node, data);
+  });
+  deleteButton.addEventListener('touchstart', () => {
     if(confirm('Delete this item?')) deleteItem(node, data);
   });
 
@@ -294,13 +303,20 @@ inputForm.addEventListener('submit', event => {
 addButton.addEventListener('click', () => {
   inputForm.classList.toggle('hidden');
   clearAddForm();
-  let d = new Date();
-  document.getElementById('date-input').value = d.toJSON().substring(0, 10);
+  document.getElementById('date-input').value = (new Date()).toJSON().substring(0, 10);
+});
+addButton.addEventListener('touchstart', () => {
+  inputForm.classList.toggle('hidden');
+  clearAddForm();
+  document.getElementById('date-input').value = (new Date()).toJSON().substring(0, 10);
 });
 
 /* When cancel button is clicked
  * Hide the add item form
  */
 cancelButton.addEventListener('click', () => {
+  inputForm.classList.add('hidden');
+});
+cancelButton.addEventListener('touchstart', () => {
   inputForm.classList.add('hidden');
 });

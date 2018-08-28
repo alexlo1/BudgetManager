@@ -71,6 +71,9 @@ firebase.auth().signOut();
 guestButton.addEventListener('click', () => {
   window.location.href = 'public.html';
 });
+guestButton.addEventListener('touchstart', () => {
+  window.location.href = 'public.html';
+});
 
 /* Verify and log in user with email and password */
 loginButton.addEventListener('click', () => {
@@ -79,9 +82,18 @@ loginButton.addEventListener('click', () => {
   else
     login(email.value, password.value);
 });
+loginButton.addEventListener('touchstart', () => {
+  if(email.value === '' && password.value === '')
+    login('test@gmail.com', 'testtest');
+  else
+    login(email.value, password.value);
+});
 
 /* Verify and sign up user with email and password */
 signupButton.addEventListener('click', () => {
+  signup(email.value, password.value);
+});
+signupButton.addEventListener('touchstart', () => {
   signup(email.value, password.value);
 });
 
