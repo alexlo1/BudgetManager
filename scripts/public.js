@@ -94,24 +94,15 @@ function addItem(data) {
   let saveButton = node.querySelector('.save-button');
   let deleteButton = node.querySelector('.delete-button');
 
-  editButton.addEventListener('click', () => {
-    editItem(node, data);
-  });
-  editButton.addEventListener('touchstart', () => {
+  addClickListener(editButton, () => {
     editItem(node, data);
   });
 
-  saveButton.addEventListener('click', () => {
-    saveItem(node, data);
-  });
-  saveButton.addEventListener('touchstart', () => {
+  addClickListener(saveButton, () => {
     saveItem(node, data);
   });
 
-  deleteButton.addEventListener('click', () => {
-    if(confirm('Delete this item?')) deleteItem(node, data);
-  });
-  deleteButton.addEventListener('touchstart', () => {
+  addClickListener(deleteButton, () => {
     if(confirm('Delete this item?')) deleteItem(node, data);
   });
 
@@ -243,6 +234,12 @@ function roundToCent(n) {
   return Math.round(n*100)/100;
 }
 
+/* Apply both onclick and ontouchstart listeners */
+function addClickListener(button, effect) {
+  button.addEventListener('click', effect);
+  button.addEventListener('touchstart', effect);
+}
+
 //----------------------------------------------------------------------------
 // test data
 const data = [
@@ -300,12 +297,7 @@ inputForm.addEventListener('submit', event => {
 /* When add button is clicked
  * Display the add item form
  */
-addButton.addEventListener('click', () => {
-  inputForm.classList.toggle('hidden');
-  clearAddForm();
-  document.getElementById('date-input').value = (new Date()).toJSON().substring(0, 10);
-});
-addButton.addEventListener('touchstart', () => {
+addClickListener(addButton, () => {
   inputForm.classList.toggle('hidden');
   clearAddForm();
   document.getElementById('date-input').value = (new Date()).toJSON().substring(0, 10);
@@ -314,9 +306,6 @@ addButton.addEventListener('touchstart', () => {
 /* When cancel button is clicked
  * Hide the add item form
  */
-cancelButton.addEventListener('click', () => {
-  inputForm.classList.add('hidden');
-});
-cancelButton.addEventListener('touchstart', () => {
+addClickListener(cancelButton, () => {
   inputForm.classList.add('hidden');
 });

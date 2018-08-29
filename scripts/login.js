@@ -64,25 +64,24 @@ function signup(email, password) {
   });
 }
 
+/* Apply both onclick and ontouchstart listeners */
+function addClickListener(button, effect) {
+  button.addEventListener('click', effect);
+  button.addEventListener('touchstart', effect);
+}
+
+//-----------------------------------------------------------------------------
+
 /* Sign out any currently signed in user */
 firebase.auth().signOut();
 
 /* Go to offline test page */
-guestButton.addEventListener('click', () => {
-  window.location.href = 'public.html';
-});
-guestButton.addEventListener('touchstart', () => {
+addClickListener(guestButton, () => {
   window.location.href = 'public.html';
 });
 
 /* Verify and log in user with email and password */
-loginButton.addEventListener('click', () => {
-  if(email.value === '' && password.value === '')
-    login('test@gmail.com', 'testtest');
-  else
-    login(email.value, password.value);
-});
-loginButton.addEventListener('touchstart', () => {
+addClickListener(loginButton, () => {
   if(email.value === '' && password.value === '')
     login('test@gmail.com', 'testtest');
   else
@@ -90,10 +89,7 @@ loginButton.addEventListener('touchstart', () => {
 });
 
 /* Verify and sign up user with email and password */
-signupButton.addEventListener('click', () => {
-  signup(email.value, password.value);
-});
-signupButton.addEventListener('touchstart', () => {
+addClickListener(signupButton, () => {
   signup(email.value, password.value);
 });
 
